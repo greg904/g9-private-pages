@@ -98,9 +98,7 @@ async function handleRequest(req: http2.Http2ServerRequest, res: http2.Http2Serv
     res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
 
     if (req.method === "OPTIONS") {
-        res.writeHead(204, {
-            "Allow": "GET, POST, HEAD, OPTIONS",
-        });
+        res.writeHead(204, { "Allow": "GET, POST, HEAD, OPTIONS" });
         res.end();
         return;
     }
@@ -201,7 +199,7 @@ function sendErrorResponse(err: any, res: http2.Http2ServerResponse) {
 
         // Reply to the client with a vague error message.
         if (!res.headersSent) {
-            res.writeHead(500, {
+            res.writeHead(errorCode, {
                 "Content-Type": "text/plain",
                 "Content-Length": errorMsg.length,
             });

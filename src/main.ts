@@ -160,9 +160,17 @@ async function handleRequest(req: http2.Http2ServerRequest, res: http2.Http2Serv
         }
     }
 
+    const urlWithoutQuery = req.url.replace(/\?.*$/, "");
+
+    if (urlWithoutQuery === "/robots.txt") {
+        // Serve robots.txt file
+        send(req, "/robots.txt", { root: "static" })
+            .pipe(res as unknown as NodeJS.WritableStream);
+        return;
+    }
+
     if (authenticated) {
         // Allow authenticated users to generate QR-codes
-        const urlWithoutQuery = req.url.replace(/\?.*$/, "");
         if (urlWithoutQuery === `/${internalNamespace}/totp-qrcode.png`) {
             const issuer = encodeURIComponent(process.env.APP_NAME!);
             const totpUrl = `otpauth://totp/${issuer}:Page%20access?secret=${totpKeyBase32}&issuer=${issuer}`;

@@ -118,9 +118,13 @@ async function handleRequest(req: http2.Http2ServerRequest, res: http2.Http2Serv
         // Validate the credentials
         const totpWithoutSpaces = body.totp.replace(/\s/g, "");
         if (body.password === process.env.APP_PASSWD && totp.verify(totpWithoutSpaces, totpKey)) {
-            // Authenticate the user and fall through to send the private resource
-            res.setHeader("Set-Cookie", `secret=${encodeURIComponent(sessionSecret)}; Secure; HttpOnly`);
-            authenticated = true;
+            // Authenticate the user and redirect to the same page to prevent
+            // the "Confirm Form Resubmission" dialog
+            res.writeHead(303, {
+                "Set-Cookie": `secret=${encodeURIComponent(sessionSecret)}; Secure; HttpOnly`,
+                "Location": req.url,
+            });
+            return;
         } else {
             authenticationError = true;
         }

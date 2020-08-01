@@ -32,6 +32,8 @@ const totpKeyBase32 = base32Encode(totpKey, "RFC4648");
 
 const sessionSecret = crypto.randomBytes(16).toString("base64");
 
+const internalNamespace = crypto.randomBytes(16).toString("base64");
+
 const server = http2.createSecureServer({
     key: fs.readFileSync("localhost-private-key.pem"),
     cert: fs.readFileSync("localhost-cert.pem"),
@@ -161,10 +163,10 @@ async function handleRequest(req: http2.Http2ServerRequest, res: http2.Http2Serv
     if (authenticated) {
         // Allow authenticated users to generate QR-codes
         const urlWithoutQuery = req.url.replace(/\?.*$/, "");
-        if (urlWithoutQuery === "/totp-qrcode.png") {
+        if (urlWithoutQuery === `/${internalNamespace}/totp-qrcode.png`) {
             const issuer = encodeURIComponent(process.env.APP_NAME!);
             const totpUrl = `otpauth://totp/${issuer}:Page%20access?secret=${totpKeyBase32}&issuer=${issuer}`;
-            const imageBuffer = await qrcode.toBuffer(totpUrl, { scale: 10 });
+            const imageBuffer = await qrcode.toBuffer(totpUrl, { scale: 1, margin: 0 });
             const headers = {
                 "Content-Type": "image/png",
                 "Content-Length": imageBuffer.length,
@@ -175,6 +177,26 @@ async function handleRequest(req: http2.Http2ServerRequest, res: http2.Http2Serv
             } else {
                 res.writeHead(200, headers);
                 res.end(imageBuffer);
+            }
+            return;
+        } else if (urlWithoutQuery === "/.totp-qrcode.html") {
+            let qrCodePage = await fs.promises.readFile("static/qr-code.html", { encoding: "utf-8" });
+
+            // Set the correct link to the QR-code image
+            qrCodePage = qrCodePage.replace("<qr-code-link>", `/${internalNamespace}/totp-qrcode.png`);
+
+            // Send the page
+            const headers = {
+                "Content-Type": "text/html",
+                "Content-Length": qrCodePage.length,
+                "Content-Security-Policy": "default-src 'none'; style-src-elem 'unsafe-inline'; img-src 'self' data:",
+            };
+            if (req.method === "HEAD") {
+                res.writeHead(204, headers);
+                res.end();
+            } else {
+                res.writeHead(200, headers);
+                res.end(qrCodePage);
             }
             return;
         }

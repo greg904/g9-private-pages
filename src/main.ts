@@ -97,6 +97,14 @@ async function handleRequest(req: http2.Http2ServerRequest, res: http2.Http2Serv
     // enable HSTS
     res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
 
+    if (req.method === "OPTIONS") {
+        res.writeHead(204, {
+            "Allow": "GET, POST, HEAD, OPTIONS",
+        });
+        res.end();
+        return;
+    }
+
     let authenticated = false;
     let authenticationError = false;
 

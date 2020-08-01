@@ -1,0 +1,8 @@
+# TypeScript
+/dist/
+
+# NodeJS
+/node_modules/
+
+# Private configuration
+/.env

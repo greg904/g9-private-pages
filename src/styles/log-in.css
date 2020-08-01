@@ -1,0 +1,68 @@
+#modal-header, .field-group, #submit-button {
+    margin: 3em 0;
+}
+/* Smaller margins at edges */
+#modal-header { margin-top: 2em; }
+#submit-button { margin-bottom: 2em; }
+
+#modal-header {
+    text-align: center;
+
+    & > h1 {
+        margin: 0 0 0.667em 0;
+        font-size: 1.5em;
+        line-height: 1.3em;
+    }
+    & > p {
+        margin: 1em 0 0 0;
+    }
+}
+
+#error {
+    color: red;
+}
+
+label {
+    margin-bottom: 0.5em;
+    display: block;
+    font-weight: bold;
+}
+input {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0.8em;
+    font-size: 1em;
+    outline: none;
+}
+input[type=text], input[type=password] {
+    border: 2px solid #818181;
+
+    transition-property: border-color, box-shadow;
+    transition-duration: 0.2s;
+    transition-timing-function: ease-in-out;
+
+    &:focus {
+        border-color: #0572EE;
+        box-shadow: 0 0 10px rgba(5, 114, 238, 0.2);
+    }
+}
+
+#submit-button {
+    background-color: #0572EE;
+    border: 2px solid #000000;
+    color: #FFFFFF;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+@media (width >= 560px) and (height >= 800px) {
+    body {
+        background-color: #F1F1F1;
+    }
+    #center-vertical {
+        background-color: #FFFFFF;
+        border: 2px solid #C1C1C1;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+}

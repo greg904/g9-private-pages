@@ -4,8 +4,12 @@
   "description": "",
   "main": "./dist/main.js",
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc -w",
+    "build": "concurrently npm:build-ts npm:build-css",
+    "build-ts": "tsc",
+    "build-css": "postcss src/styles --dir static/styles",
+    "watch": "concurrently npm:watch-ts npm:watch-css",
+    "watch-ts": "tsc -w",
+    "watch-css": "postcss src/styles --dir static/styles --watch",
     "serve": "node .",
     "serve-debug": "nodemon --inspect .",
     "debug": "npm run build && concurrently npm:watch npm:serve-debug",
@@ -17,7 +21,10 @@
     "@types/notp": "^2.0.0",
     "@types/qrcode": "^1.3.5",
     "concurrently": "^5.2.0",
+    "cssnano": "^4.1.10",
     "nodemon": "^2.0.4",
+    "postcss-cli": "^7.1.1",
+    "postcss-cssnext": "^3.1.0",
     "typescript": "^3.9.7"
   },
   "dependencies": {

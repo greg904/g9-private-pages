@@ -169,6 +169,14 @@ async function handleRequest(req: http2.Http2ServerRequest, res: http2.Http2Serv
         return;
     }
 
+    const stylesUrlPrefix = `/${internalNamespace}/styles`;
+    if (urlWithoutQuery.startsWith(stylesUrlPrefix)) {
+        // Serve CSS file
+        send(req, "/" + urlWithoutQuery.substring(stylesUrlPrefix.length), { root: "static/styles" })
+            .pipe(res as unknown as NodeJS.WritableStream);
+        return;
+    }
+
     if (authenticated) {
         // Allow authenticated users to generate QR-codes
         if (urlWithoutQuery === `/${internalNamespace}/totp-qrcode.png`) {
@@ -193,11 +201,14 @@ async function handleRequest(req: http2.Http2ServerRequest, res: http2.Http2Serv
             // Set the correct link to the QR-code image
             qrCodePage = qrCodePage.replace("<qr-code-link>", `/${internalNamespace}/totp-qrcode.png`);
 
+            qrCodePage = qrCodePage.replace("<global-css-link>", `/${internalNamespace}/styles/global.css`);
+            qrCodePage = qrCodePage.replace("<specific-css-link>", `/${internalNamespace}/styles/qr-code.css`);
+
             // Send the page
             const headers = {
                 "Content-Type": "text/html",
                 "Content-Length": qrCodePage.length,
-                "Content-Security-Policy": "default-src 'none'; style-src-elem 'unsafe-inline'; img-src 'self' data:",
+                "Content-Security-Policy": "default-src 'none'; style-src-elem 'self'; img-src 'self' data:",
             };
             if (req.method === "HEAD") {
                 res.writeHead(204, headers);
@@ -220,11 +231,14 @@ async function handleRequest(req: http2.Http2ServerRequest, res: http2.Http2Serv
             logInPage = logInPage.replace(/<!-- error start -->.*<!-- error end -->/s, "");
         }
 
+        logInPage = logInPage.replace("<global-css-link>", `/${internalNamespace}/styles/global.css`);
+        logInPage = logInPage.replace("<specific-css-link>", `/${internalNamespace}/styles/log-in.css`);
+
         // Send the authentication page
         const headers = {
             "Content-Type": "text/html",
             "Content-Length": logInPage.length,
-            "Content-Security-Policy": "default-src 'none'; style-src-elem 'unsafe-inline'; img-src data:",
+            "Content-Security-Policy": "default-src 'none'; style-src-elem 'self'; img-src data:",
         };
         if (req.method === "HEAD") {
             res.writeHead(204, headers);

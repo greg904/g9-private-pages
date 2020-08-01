@@ -145,13 +145,15 @@ async function handleRequest(req: http2.Http2ServerRequest, res: http2.Http2Serv
             const issuer = encodeURIComponent(process.env.APP_NAME!);
             const totpUrl = `otpauth://totp/${issuer}:Page%20access?secret=${totpKeyBase32}&issuer=${issuer}`;
             const imageBuffer = await qrcode.toBuffer(totpUrl, { scale: 10 });
-            res.writeHead(200, {
+            const headers = {
                 "Content-Type": "image/png",
                 "Content-Length": imageBuffer.length,
-            });
+            };
             if (req.method === "HEAD") {
+                res.writeHead(204, headers);
                 res.end();
             } else {
+                res.writeHead(200, headers);
                 res.end(imageBuffer);
             }
             return;
@@ -169,14 +171,16 @@ async function handleRequest(req: http2.Http2ServerRequest, res: http2.Http2Serv
         }
 
         // Send the authentication page
-        res.writeHead(200, {
+        const headers = {
             "Content-Type": "text/html",
             "Content-Length": logInPage.length,
             "Content-Security-Policy": "default-src 'none'; style-src-elem 'unsafe-inline'",
-        });
+        };
         if (req.method === "HEAD") {
+            res.writeHead(204, headers);
             res.end();
         } else {
+            res.writeHead(200, headers);
             res.end(logInPage);
         }
     }

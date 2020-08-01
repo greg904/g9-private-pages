@@ -8,6 +8,8 @@ import send from "send";
 import * as querystring from "querystring";
 import * as qrcode from "qrcode";
 
+import RateLimiter from "./rate-limiter";
+
 // Read environment variables from .env file
 dotenv.config();
 
@@ -35,6 +37,8 @@ const server = http2.createSecureServer({
     cert: fs.readFileSync("localhost-cert.pem"),
     allowHTTP1: true,
 });
+
+const rateLimiter = new RateLimiter();
 
 class BadRequestError extends Error {
     constructor(message?: string) {
@@ -121,18 +125,36 @@ async function handleRequest(req: http2.Http2ServerRequest, res: http2.Http2Serv
             body.totp === null || typeof body.totp !== "string")
             throw new BadRequestError("invalid log in request body");
 
-        // Validate the credentials
-        const totpWithoutSpaces = body.totp.replace(/\s/g, "");
-        if (body.password === process.env.APP_PASSWD && totp.verify(totpWithoutSpaces, totpKey)) {
-            // Authenticate the user and redirect to the same page to prevent
-            // the "Confirm Form Resubmission" dialog
-            res.writeHead(303, {
-                "Set-Cookie": `secret=${encodeURIComponent(sessionSecret)}; Secure; HttpOnly`,
-                "Location": req.url,
-            });
-            return;
-        } else {
+        const ip = req.socket.remoteAddress;
+        if (ip === undefined)
+            throw new Error("socket IP is undefined");
+        if (!rateLimiter.validateAuthRequest(ip)) {
+            console.log(`user with IP=${req.socket.remoteAddress} was rate limited`);
             authenticationError = true;
+        } else {
+            // Validate the credentials.
+            // Note: do not short circuit to make timing attacks harder (but
+            // still possible).
+            let success = true;
+            success = success && body.password === process.env.APP_PASSWD;
+            success = success && body.totp.replace(/\s/g, "") === totp.gen(totpKey);
+
+            if (success) {
+                // Authenticate the user and redirect to the same page to prevent
+                // the "Confirm Form Resubmission" dialog
+                console.log(`user with IP=${req.socket.remoteAddress} has successfully authenticated`);
+                rateLimiter.resetPunishments(ip);
+                res.writeHead(303, {
+                    "Set-Cookie": `secret=${encodeURIComponent(sessionSecret)}; Secure; HttpOnly`,
+                    "Location": req.url,
+                });
+                res.end();
+                return;
+            } else {
+                console.log(`user with IP=${req.socket.remoteAddress} has failed authentication`);
+                rateLimiter.punishAuthFailure(ip);
+                authenticationError = true;
+            }
         }
     }
 

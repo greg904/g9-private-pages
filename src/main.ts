@@ -194,7 +194,7 @@ async function handleRequest(req: http2.Http2ServerRequest, res: http2.Http2Serv
         const headers = {
             "Content-Type": "text/html",
             "Content-Length": logInPage.length,
-            "Content-Security-Policy": "default-src 'none'; style-src-elem 'unsafe-inline'",
+            "Content-Security-Policy": "default-src 'none'; style-src-elem 'unsafe-inline'; img-src data:",
         };
         if (req.method === "HEAD") {
             res.writeHead(204, headers);

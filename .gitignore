@@ -4,5 +4,6 @@
 # NodeJS
 /node_modules/
 
-# Private configuration
-/.env
+# DB files
+/sess-token-db.json
+/rate-db.json

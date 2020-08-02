@@ -1,0 +1,160 @@
+/**
+ * Page style
+ */
+
+html, body {
+    height: 100%;
+    padding: 0;
+    margin: 0;
+}
+body {
+    line-height: 1.5em;
+    /* Use the system font instead of the default sans-serif font
+       because it's too ugly. */
+    font-family: system-ui;
+}
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: #121314;
+        color: #FFFFFF;
+    }
+}
+
+/**
+ * Centering utility
+ */
+
+#center-table {
+    /* Center the body horizontally */
+    margin: 0 auto;
+    /* Center the child div vertically (part 1). Note that we use
+    the `display: table` and `vertical-align: middle` way to do
+    it instead of `display: flex` because old IE doesn't support
+    it. */
+    display: table;
+}
+#center-table-cell {
+    /* Center the child div vertically (part 2) */
+    display: table-cell;
+    vertical-align: middle;
+}
+
+/**
+ * Modal style
+ */
+
+#modal {
+    max-width: 25em;
+    padding: 2em;
+}
+
+#modal-header, .field-group, .submit-button { margin: 3em 0; }
+/* Smaller margins at edges */
+#modal-header { margin-top: 2em; }
+.submit-button { margin-bottom: 2em; }
+
+#modal-header { text-align: center; }
+#modal-header > h1 {
+    margin: 0 0 0.667em 0;
+    font-size: 1.5em;
+    line-height: 1.3em;
+}
+#modal-header > p { margin: 1em 0 0 0; }
+
+/* Only give a "modal" look to the modal when the screen is large and tall
+   enough. */
+@media (min-width: 560px) and (min-height: 800px) {
+    body { background-color: #F1F1F1; }
+    @media (prefers-color-scheme: dark) {
+        body { background-color: #000000; }
+    }
+    
+    #modal {
+        background-color: #FFFFFF;
+        border: 2px solid #C1C1C1;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+    @media (prefers-color-scheme: dark) {
+        #modal {
+            background-color: #121314;
+            border-color: #292929;
+            box-shadow: none;
+        }
+    }
+}
+
+/**
+ * Form style
+ */
+
+.form-error { color: red; }
+
+label {
+    margin-bottom: 0.5em;
+    display: block;
+    font-weight: bold;
+}
+input {
+    /* Undo changes from browser default style */
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    font-family: system-ui;
+    font-size: 1em;
+    line-height: 1.5em;
+    outline: none;
+}
+input, .submit-button { padding: 0.8em; }
+input[type=submit], .submit-button { cursor: pointer; }
+input[type=text], input[type=password] { border: 2px solid #818181; }
+input[type=text]:focus, input[type=password]:focus {
+    border-color: #0572EE;
+    box-shadow: 0 0 10px rgba(5, 114, 238, 0.2);
+}
+@media (prefers-color-scheme: dark) {
+    input[type=text], input[type=password] {
+        background-color: #0A0A0A;
+        color: #FFFFFF;
+    }
+}
+
+.submit-button {
+    background-color: #2088FF;
+    border: 2px solid #2088FF;
+    color: #FFFFFF;
+    font-weight: bold;   
+}
+#submit-button--loading {
+    background-color: #003B80;
+    cursor: default;
+}
+
+/**
+ * Spinner (shown when the JS is waiting for a response from the server)
+ */
+
+#spinner {
+    display: block;
+    width: 1.5em;
+    height: 1.5em;
+    box-sizing: border-box;
+    margin: 0 auto;
+    
+    border: .25em solid #FFFFFF;
+    /* Make a hole in the circle */
+    border-right-color: transparent;
+    border-radius: 50%;
+
+    animation: spin 1s infinite linear;
+}
+
+@keyframes spin {
+    from { transform: rotateZ(0deg); }
+    to { transform: rotateZ(360deg); }
+}
+
+/**
+ * Miscellaneous
+ */
+
+.hidden { display: none; }

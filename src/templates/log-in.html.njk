@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- Disable favicon -->
+        <link rel="icon" href="data:,">
+        <link rel="stylesheet" href="{{ assetUrlByName('css/log-in.css') }}">
+        <title>Log in</title>
+    </head>
+    <body id="center-table">
+        <div id="center-table-cell">
+            <div id="modal">
+                <div id="modal-header">
+                    <h1>You must log in to access this resource</h1>
+                    <p>
+                        This resource is protected by a password. You must enter
+                        the correct password in order to access it.
+                    </p>
+                </div>
+
+                <p id="credentials-error" {{credentialsErrorClass|safe}}>
+                    <strong>Invalid password or TOTP!</strong> If you forgot
+                    your password or lost access to the TOTP generator, contact
+                    your administator.
+                </p>
+                <p id="csrf-error" {{csrfErrorClass|safe}}>
+                    <strong>This log in form has expired!</strong> Please,
+                    reload the page and try again. If you're having trouble
+                    logging in, contact your administator.
+                </p>
+                <p id="request-error" class="form-error hidden">
+                    <strong>The log in request failed!</strong> Please check
+                    your network connection.
+                </p>
+
+                <form method="POST" id="log-in-form">
+                    <input type="hidden" name="anti-csrf-token" value="{{ csrfToken }}">
+
+                    <div class="field-group">
+                        <label for="password-field">Password</label>
+                        <input id="password-field" type="password"
+                            name="password" autofocus required>
+                    </div>
+        
+                    <div class="field-group">
+                        <label for="totp-field">
+                            TOTP (6-digit code on your phone)
+                        </label>
+                        <input id="totp-field" type="text" name="totp" required
+                            pattern="(\s*\d){6}\s*" inputmode="numeric"
+                            placeholder="Example: 123456">
+                    </div>
+        
+                    <input id="submit-button--normal" class="submit-button"
+                        type="submit" value="Log in">
+                    <div id="submit-button--loading"
+                        class="submit-button hidden">
+                        <div id="spinner" role="status" aria-label="Loading...">
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script src="{{ assetUrlByName('js/log-in.js') }}" defer></script>
+    </body>
+</html>

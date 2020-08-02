@@ -1,3 +1,0 @@
-# Disallow crawling for every page
-User-agent: *
-Disallow: /

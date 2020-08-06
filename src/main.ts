@@ -363,7 +363,7 @@ async function handleRequest(req: http2.Http2ServerRequest, res: http2.Http2Serv
         const logInPage = await portalTemplates.render("log-in.html.njk", {
             credentialsErrorClass: "class=\"form-error" + (logInFormError === "credentials" ? "" : " hidden") + "\"",
             csrfErrorClass: "class=\"form-error" + (logInFormError === "csrf" ? "" : " hidden") + "\"",
-            csrfToken: base64UrlSafeEncode(antiCsrfToken),
+            antiCsrfToken: base64UrlSafeEncode(antiCsrfToken),
         });
         sendLogInPage(req, res, logInPage);
     }

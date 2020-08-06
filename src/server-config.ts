@@ -4,7 +4,7 @@ interface ServerConfig {
     readonly devMode: boolean;
     readonly serverPort: number;
     readonly allowedHosts: ReadonlyArray<string>;
-    readonly httpOrigin: string;
+    readonly httpOrigins: ReadonlyArray<string>;
     readonly password: string;
     readonly privateResourcesRoot: string;
     readonly totp: {
@@ -58,7 +58,7 @@ export default function readServerConfig(): ServerConfig {
         devMode: process.env.NODE_ENV === "development",
         serverPort,
         allowedHosts: (process.env.G9_HOSTS || `localhost:${serverPort}`).split(","),
-        httpOrigin: process.env.G9_HTTP_ORIGIN || `https://localhost:${serverPort}`,
+        httpOrigins: (process.env.G9_HTTP_ORIGIN || `https://localhost:${serverPort}`).split(","),
         password: process.env.G9_PASSWD || "insecure-password",
         privateResourcesRoot: process.env.G9_PRIV_ROOT || "private-res",
         totp: {

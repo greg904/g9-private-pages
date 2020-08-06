@@ -171,7 +171,7 @@ async function handleRequest(req: http2.Http2ServerRequest, res: http2.Http2Serv
         if (req.headers.referer) {
             let correctOrigin;
             try {
-                correctOrigin = new URL(req.headers.referer).origin === config.httpOrigin;
+                correctOrigin = config.httpOrigins.includes(new URL(req.headers.referer).origin);
             } catch (err) {
                 correctOrigin = false;
             }
@@ -184,7 +184,7 @@ async function handleRequest(req: http2.Http2ServerRequest, res: http2.Http2Serv
 
         // Check if the Origin header says that the request comes from a page
         // on our site.
-        if (req.headers.origin !== undefined && req.headers.origin !== config.httpOrigin) {
+        if (req.headers.origin !== undefined && !config.httpOrigins.includes(req.headers.origin)) {
             l.log(LogType.Warn, "auth_unexpected_origin", { origin: req.headers.origin });
             res.socket.destroy();
             return;

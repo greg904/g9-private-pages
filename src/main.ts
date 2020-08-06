@@ -101,7 +101,8 @@ async function handleRequest(req: http2.Http2ServerRequest, res: http2.Http2Serv
         return;
     }
 
-    l.log(LogType.Info, "http_request", { ip, method: req.method, url: req.url });
+    if (config.logRequest)
+        l.log(LogType.Info, "http_request", { ip, method: req.method, url: req.url });
 
     // Make sure that the Host header is correct
     const host = readRequestHost(req);

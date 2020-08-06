@@ -7,6 +7,7 @@ interface ServerConfig {
     readonly httpOrigins: ReadonlyArray<string>;
     readonly password: string;
     readonly privateResourcesRoot: string;
+    readonly logRequest: boolean;
     readonly totp: {
         readonly key: Buffer;
         readonly qrCodeUrlKey: Buffer;
@@ -61,6 +62,7 @@ export default function readServerConfig(): ServerConfig {
         httpOrigins: (process.env.G9_HTTP_ORIGIN || `https://localhost:${serverPort}`).split(","),
         password: process.env.G9_PASSWD || "insecure-password",
         privateResourcesRoot: process.env.G9_PRIV_ROOT || "private-res",
+        logRequest: process.env.G9_LOG_REQUESTS !== "0",
         totp: {
             key: Buffer.from(process.env.G9_TOTP_KEY || "VGhpcyBpcyBhIHZlcnkgaW5zZWN1cmUgVE9UUCBrZXk=", "base64"),
             qrCodeUrlKey: Buffer.from(process.env.G9_TOTP_QR_CODE_URL_KEY || "VGhpcyBpcyBhIHZlcnkgaW5zZWN1cmUgVE9UUCBRUi1jb2RlIFVSTCBrZXk=", "base64"),

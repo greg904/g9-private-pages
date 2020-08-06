@@ -1,35 +1,35 @@
 import { RateLimit } from "./rate-limiter";
 
 interface ServerConfig {
-    readonly devMode: boolean;
-    readonly serverPort: number;
-    readonly allowedHosts: ReadonlyArray<string>;
-    readonly httpOrigins: ReadonlyArray<string>;
-    readonly password: string;
-    readonly privateResourcesRoot: string;
-    readonly logRequest: boolean;
-    readonly totp: {
-        readonly key: Buffer;
-        readonly qrCodeUrlKey: Buffer;
-        readonly issuer: string;
-        readonly accountName: string;
+    devMode: boolean;
+    serverPort: number;
+    allowedHosts: string[];
+    httpOrigins: string[];
+    password: string;
+    privateResourcesRoot: string;
+    logRequest: boolean;
+    totp: {
+        key: Buffer;
+        qrCodeUrlKey: Buffer;
+        issuer: string;
+        accountName: string;
     }
-    readonly tls: {
-        readonly keyFile: string;
-        readonly certFile: string;
+    tls: {
+        keyFile: string;
+        certFile: string;
     };
-    readonly csrf: {
-        readonly secret: Buffer;
-        readonly formTimeout: number;
+    csrf: {
+        secret: Buffer;
+        formTimeout: number;
     };
-    readonly session: {
-        readonly timeout: number;
-        readonly tokenDbFile?: string;
+    session: {
+        timeout: number;
+        tokenDbFile?: string;
     };
-    readonly rates: {
-        readonly authGlobal: RateLimit;
-        readonly authPerIp: RateLimit;
-        readonly dbFile?: string;
+    rates: {
+        authGlobal: RateLimit;
+        authPerIp: RateLimit;
+        dbFile?: string;
     };
 }
 

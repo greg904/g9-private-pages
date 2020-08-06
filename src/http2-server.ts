@@ -81,11 +81,24 @@ export default class Http2Server {
 
     close() {
         return new Promise((resolve, reject) => {
+            let timedOut = false;
+
+            // Give the server 8 seconds to close
+            setTimeout(() => {
+                this.logger.log(LogType.Critical, "http_close_time_out");
+                resolve();
+
+                timedOut = true;
+            }, 8000);
+
             this.actualServer.close(err => {
+                if (timedOut)
+                    return;
+
                 if (err) {
                     reject(err);
                 } else {
-                    resolve(err);
+                    resolve();
                 }
             });
         })

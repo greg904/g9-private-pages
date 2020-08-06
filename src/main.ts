@@ -257,17 +257,17 @@ async function handleRequest(req: http2.Http2ServerRequest, res: http2.Http2Serv
                 }
             }
         } catch (err) {
-            l.log(LogType.Warn, "auth_request_anti_body_csrf_token_weird");
+            l.log(LogType.Warn, "auth_request_body_anti_csrf_token_weird");
             res.socket.destroy();
             return;
         }
         if (!antiCsrfValid) {
-            l.log(LogType.Warn, "auth_request_anti_body_csrf_token_forged");
+            l.log(LogType.Warn, "auth_request_body_anti_csrf_token_forged");
             res.socket.destroy();
             return;
         }
         if (formExpired !== null) {
-            l.log(LogType.Info, "auth_request_anti_body_csrf_token_expired");
+            l.log(LogType.Info, "auth_request_body_anti_csrf_token_expired");
             res.socket.destroy();
             return;
         }

@@ -102,7 +102,7 @@ async function handleRequest(req: http2.Http2ServerRequest, res: http2.Http2Serv
     }
 
     if (config.logRequest)
-        l.log(LogType.Info, "http_request", { ip, method: req.method, url: req.url });
+        l.log(LogType.Info, "http_request", { method: req.method, url: req.url });
 
     // Make sure that the Host header is correct
     const host = readRequestHost(req);
@@ -185,7 +185,9 @@ async function handleRequest(req: http2.Http2ServerRequest, res: http2.Http2Serv
 
         // Check if the Origin header says that the request comes from a page
         // on our site.
-        if (req.headers.origin !== undefined && !config.httpOrigins.includes(req.headers.origin)) {
+        if (req.headers.origin !== undefined &&
+            req.headers.origin !== "null" &&
+            !config.httpOrigins.includes(req.headers.origin)) {
             l.log(LogType.Warn, "auth_unexpected_origin", { origin: req.headers.origin });
             res.socket.destroy();
             return;

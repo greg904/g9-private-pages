@@ -1,4 +1,5 @@
 import * as http2 from "http2";
+import * as net from "net";
 
 import { LogType, Logger, LogContext } from "./logger";
 
@@ -18,8 +19,11 @@ class Http2RequestLogContext implements LogContext {
 }
 
 export default class Http2Server {
+    private static SOCKET_ID_COUNTER = 0;
+
     private readonly actualServer: http2.Http2SecureServer;
     private readonly logger: Logger;
+    private readonly openSockets = new Map<number, net.Socket>();
     private overrideErrorHandler: ((err: Error) => void) | null = null;
     handleRequest?: (req: http2.Http2ServerRequest, res: http2.Http2ServerResponse, l: Logger) => Promise<void>;
 
@@ -31,6 +35,13 @@ export default class Http2Server {
         });
         this.logger = logger;
 
+        this.actualServer.on("connection", (socket: net.Socket) => {
+            // Store the open socket so that we can close them all when we want
+            // to close the server
+            const id = Http2Server.SOCKET_ID_COUNTER++;
+            this.openSockets.set(id, socket);
+            socket.on("close", () => this.openSockets.delete(id));
+        });
         this.actualServer.on("error", err => {
             if (this.overrideErrorHandler === null) {
                 this.logger.log(LogType.Critical, "http_server_error", { err: Logger.formatError(err) });
@@ -90,6 +101,14 @@ export default class Http2Server {
 
                 timedOut = true;
             }, 8000);
+
+            // Close all open sockets so that the server can actually close
+            if (this.openSockets.size > 0) {
+                this.logger.log(LogType.Info, "http_close_open_sockets", { count: this.openSockets.size });
+
+                for (let socket of this.openSockets.values())
+                    socket.destroy();
+            }
 
             this.actualServer.close(err => {
                 if (timedOut)

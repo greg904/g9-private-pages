@@ -5,6 +5,7 @@ import * as stream from "stream";
 import * as util from "util";
 
 import { base64UrlSafeEncode } from "./encoding";
+import { Logger, LogType } from "./logger";
 
 const streamPipeline = util.promisify(stream.pipeline);
 
@@ -27,9 +28,11 @@ export class PortalAssets {
     private readonly urlByNameMap = new Map<string, string>();
     private readonly filePathByUrlMap = new Map<string, string>();
     private readonly hotReload: boolean;
+    private readonly logger: Logger;
 
-    constructor(hotReload: boolean) {
+    constructor(hotReload: boolean, logger: Logger) {
         this.hotReload = hotReload;
+        this.logger = logger;
     }
 
     async add(name: string) {
@@ -45,7 +48,7 @@ export class PortalAssets {
         this.urlByNameMap.set(name, url);
         this.filePathByUrlMap.set(url, filePath);
 
-        console.log(`added an asset with name ${name} at URL ${url}`);
+        this.logger.log(LogType.Info, "assets_add", { name, url });
 
         // Watch file changes for hot reloading (only if enabled)
         if (!this.hotReload)
@@ -69,10 +72,10 @@ export class PortalAssets {
                         this.urlByNameMap.set(name, url);
                         this.filePathByUrlMap.set(url, filePath);
 
-                        console.log(`moved asset with name ${name} to new URL ${url} after file change`);
+                        this.logger.log(LogType.Info, "assets_hot_reload_move", { name, url });
                     })
                     .catch(err => {
-                        console.error("failed to compute portal asset hash for hot reload", err);
+                        this.logger.log(LogType.Critical, "assets_hot_reload_fail_compute_hash", { err: Logger.formatError(err) });
                     });
             }
 

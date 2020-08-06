@@ -28,7 +28,7 @@ const cryptoRandomBytes = util.promisify(crypto.randomBytes);
 
 const config = readServerConfig();
 const server = new Http2Server(fs.readFileSync(config.tls.keyFile), fs.readFileSync(config.tls.certFile), Logger.ROOT);
-const portalAssets = new PortalAssets(config.devMode);
+const portalAssets = new PortalAssets(config.devMode, Logger.ROOT);
 const portalTemplates = new PortalTemplates(config.devMode, portalAssets);
 const sessionTokens = new TemporaryTokenDb(config.session.timeout * 1000, config.session.tokenDbFile);
 const rateLimiter = new RateLimiter(config.rates.authGlobal, config.rates.authPerIp, config.rates.dbFile);
@@ -374,29 +374,28 @@ Promise.all([
     sessionTokens.loadFromDisk()
         .then(result => {
             if (result === LoadFromDiskResult.FileNotFound)
-                console.warn("could not find the session token DB file");
+                Logger.ROOT.log(LogType.Warn, "session_tokens_db_file_missing");
         }),
     rateLimiter.loadFromDisk()
         .then(result => {
             if (result === LoadFromDiskResult.FileNotFound)
-                console.warn("could not find the auth rate DB file");
+                Logger.ROOT.log(LogType.Warn, "auth_rate_db_file_missing");
         }),
 ]).then(async () => {
     await server.listen(config.serverPort);
-    console.log("server is listening...");
+    Logger.ROOT.log(LogType.Info, "http_listening");
 }).catch(err => {
-    console.error("failed to start", err);
+    Logger.ROOT.log(LogType.Critical, "start_fail", { err: Logger.formatError(err) });
 
     // TODO: why do we have to exit here?
     process.exit(1);
 });
 
 async function gracefulShutdown() {
-    console.log("closing server...");
+    Logger.ROOT.log(LogType.Info, "http_closing");
     await server.close();
 
-    console.log("saving session tokens...");
-    console.log("saving auth rate information...");
+    Logger.ROOT.log(LogType.Info, "persisting");
     await Promise.all([sessionTokens.saveToDisk(), rateLimiter.saveToDisk()]);
 }
 let isShuttingDown = false;
@@ -411,7 +410,7 @@ function gracefulShutdownWrapper() {
             process.exit(0);
         })
         .catch(err => {
-            console.error("failed to gracefully exit", err);
+            Logger.ROOT.log(LogType.Critical, "graceful_exit_fail", { err: Logger.formatError(err) });
             // TODO: why do we have to exit here?
             process.exit(1);
         });

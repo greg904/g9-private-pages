@@ -25,7 +25,12 @@ const enum SecurityMode {
 }
 
 const enum CacheControl {
+    // Should not be cached at all
     Forbid,
+
+    // Should not be cached very long because it's private
+    Private,
+
     CacheForever,
 }
 
@@ -50,8 +55,6 @@ function writeHeadHelper(req: http2.Http2ServerRequest, res: http2.Http2ServerRe
         // anyway so let's not make it waste energy. Also, it makes some security
         // audits happier.
         "X-Content-Type-Options": "nosniff",
-        
-        [http2.constants.HTTP2_HEADER_CACHE_CONTROL]: cacheControl === CacheControl.Forbid ? "no-store" : "max-age=31536000",
 
         ...additionalHeaders,
     };
@@ -61,6 +64,18 @@ function writeHeadHelper(req: http2.Http2ServerRequest, res: http2.Http2ServerRe
 
     if (etag !== undefined)
         headers[http2.constants.HTTP2_HEADER_ETAG] = `"${etag}"`;
+
+    switch (cacheControl) {
+    case CacheControl.Forbid:
+        headers[http2.constants.HTTP2_HEADER_CACHE_CONTROL] = "no-store";
+        break;
+    case CacheControl.Private:
+        headers[http2.constants.HTTP2_HEADER_CACHE_CONTROL] = "private; max-age=60";
+        break;
+    case CacheControl.CacheForever:
+        headers[http2.constants.HTTP2_HEADER_CACHE_CONTROL] = "max-age=31536000";
+        break;
+    }
 
     res.writeHead(statusCode, headers);
 }
@@ -153,5 +168,5 @@ export function sendPortalAssetFile(file: string, etag: string, req: http2.Http2
     return sendFile(req, res, file, SecurityMode.Strict, CacheControl.CacheForever, etag);
 }
 export function sendPrivateResourceFile(file: string, req: http2.Http2ServerRequest, res: http2.Http2ServerResponse) {
-    return sendFile(req, res, file, SecurityMode.Default, CacheControl.Forbid, undefined);
+    return sendFile(req, res, file, SecurityMode.Default, CacheControl.Private, undefined);
 }

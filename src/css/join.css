@@ -1,6 +1,0 @@
-@import "./helpers/base.css";
-@import "./helpers/utility.css";
-
-.qr-code {
-    image-rendering: pixelated;
-}

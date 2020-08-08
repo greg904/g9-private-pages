@@ -2,11 +2,11 @@ import * as crypto from "crypto";
 import * as util from "util";
 
 import { base64UrlSafeEncode } from "./encoding";
-import { Persistable } from "./persistable";
+import { Persistable } from "./persist";
 
 const cryptoRandomBytes = util.promisify(crypto.randomBytes);
 
-export class Token {
+export class TemporaryToken {
     readonly value: string;
     readonly freshUntil: Date;
     readonly validUntil: Date;
@@ -37,15 +37,14 @@ export class Token {
  * earlier but whose remaining lifetime is still greater that the lifetime
  * specified in the constructor.
  */
-export class TemporaryTokenDb extends Persistable {
+export class TemporaryTokenDb implements Persistable {
     private static MAX_VALID_TOKEN_COUNT = 32;
 
-    private readonly tokens: Token[] = [];
+    private readonly tokens: TemporaryToken[] = [];
     private readonly minTokenLife: number;
     private readonly tokenFreshnessDuration: number;
 
-    constructor(minTokenLife: number, persistFile?: string) {
-        super(persistFile);
+    constructor(minTokenLife: number) {
         this.minTokenLife = minTokenLife;
         this.tokenFreshnessDuration = this.minTokenLife /
             (TemporaryTokenDb.MAX_VALID_TOKEN_COUNT - 1);
@@ -79,7 +78,7 @@ export class TemporaryTokenDb extends Persistable {
         this.tokens.length = 0;
 
         for (let entry of json)
-            this.tokens.push(new Token(entry.v, new Date(entry.f), new Date(entry.e)));
+            this.tokens.push(new TemporaryToken(entry.v, new Date(entry.f), new Date(entry.e)));
     }
 
     toJson() {
@@ -99,7 +98,7 @@ export class TemporaryTokenDb extends Persistable {
         const now = new Date();
         const freshUntil = new Date(now.getTime() + this.tokenFreshnessDuration);
         const validUntil = new Date(now.getTime() + this.tokenFreshnessDuration + this.minTokenLife);
-        return new Token(value, freshUntil, validUntil);
+        return new TemporaryToken(value, freshUntil, validUntil);
     }
 
     private removeExpiredTokens() {

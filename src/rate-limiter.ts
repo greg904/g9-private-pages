@@ -1,4 +1,4 @@
-import { Persistable } from "./persistable";
+import { Persistable } from "./persist";
 
 interface Bucket {
     volume: number;
@@ -10,7 +10,7 @@ export interface RateLimit {
     readonly windowSize: number;
 }
 
-export class RateLimiter extends Persistable {
+export class RateLimiter implements Persistable {
     private static MAX_IP_COUNT = 32;
 
     private readonly limitGlobal: RateLimit;
@@ -18,8 +18,7 @@ export class RateLimiter extends Persistable {
     private globalBucket: Bucket | null = null;
     private readonly clientBuckets = new Map<string, Bucket>();
 
-    constructor(globalLimit: RateLimit, perIpLimit: RateLimit, persistFile?: string) {
-        super(persistFile);
+    constructor(globalLimit: RateLimit, perIpLimit: RateLimit) {
         this.limitGlobal = globalLimit;
         this.limitPerIp = perIpLimit;
     }

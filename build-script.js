@@ -16,22 +16,22 @@ const JS_OUT_DIR = path.join(__dirname, "dist", "assets", "js");
 const TEMPLATES_SRC_DIR = path.join(__dirname, "src", "templates");
 const TEMPLATES_OUT_DIR = path.join(__dirname, "dist", "templates");
 
-async function getCssFiles() {
-    return fs.promises.readdir(CSS_SRC_DIR);
+function getCssFiles() {
+    return ["log-in.css"];
 }
 
-async function getJsFiles() {
-    return fs.promises.readdir(JS_SRC_DIR);
+function getJsFiles() {
+    return ["log-in.js"];
 }
 
-async function getTemplateFiles() {
-    return fs.promises.readdir(TEMPLATES_SRC_DIR);
+function getTemplateFiles() {
+    return ["log-in.html.njk"];
 }
 
 async function minifyHtml() {
     console.log("minifying HTML...");
 
-    const baseNames = await getTemplateFiles();
+    const baseNames = getTemplateFiles();
     return baseNames.map(async (baseName) => {
         const inputFile = path.join(TEMPLATES_SRC_DIR, baseName);
         const outputFile = path.join(TEMPLATES_OUT_DIR, baseName);
@@ -80,7 +80,7 @@ async function compileCssFile(inputFile, outputFile, optimize) {
 async function compileCss() {
     console.log("compiling CSS...");
 
-    const baseNames = await getCssFiles();
+    const baseNames = getCssFiles();
     return baseNames.map(baseName => {
         const inputFile = path.join(CSS_SRC_DIR, baseName);
         const outputFile = path.join(CSS_OUT_DIR, baseName);
@@ -100,7 +100,7 @@ async function minifyJs() {
         isolation_mode: "IIFE",
     });
     
-    const baseNames = await getJsFiles();
+    const baseNames = getJsFiles();
     return baseNames.map(async baseName => {
         const inputFile = path.join(__dirname, "src", "js", baseName);
         const outputFile = path.join(__dirname, "dist", "assets", "js", baseName);
@@ -162,7 +162,7 @@ async function watch() {
     const filesToCopy = [];
 
     if (argv.html) {
-        for (let baseName of await getTemplateFiles()) {
+        for (let baseName of getTemplateFiles()) {
             filesToCopy.push({
                 from: path.join(TEMPLATES_SRC_DIR, baseName),
                 to: path.join(TEMPLATES_OUT_DIR, baseName),
@@ -170,7 +170,7 @@ async function watch() {
         }
     }
     if (argv.css) {
-        for (let baseName of await getCssFiles()) {
+        for (let baseName of getCssFiles()) {
             const inputFile = path.join(CSS_SRC_DIR, baseName);
             const outputFile = path.join(CSS_OUT_DIR, baseName);
 
@@ -181,7 +181,7 @@ async function watch() {
         }
     }
     if (argv.js) {
-        for (let baseName of await getJsFiles()) {
+        for (let baseName of getJsFiles()) {
             filesToCopy.push({
                 from: path.join(JS_SRC_DIR, baseName),
                 to: path.join(JS_OUT_DIR, baseName),

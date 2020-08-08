@@ -5,22 +5,18 @@ import * as crypto from "crypto";
 import * as fs from "fs";
 import * as http2 from "http2";
 import * as path from "path";
-import * as querystring from "querystring";
 import * as util from "util";
-
-import { totp } from "notp";
-import * as qrcode from "qrcode";
 
 import { readAuthRequest, AuthResponseType } from "./auth-request";
 import { readCookies } from "./cookies";
-import { base64UrlSafeEncode, base32Encode } from "./encoding";
+import { base64UrlSafeEncode } from "./encoding";
 import Http2Server from "./http2-server";
 import { Logger, LogType } from "./logger";
-import { LoadFromDiskResult } from "./persistable";
+import { LoadFromDiskResult, PersistManager } from "./persist";
 import { PortalAssets } from "./portal-assets";
 import { PortalTemplates } from "./portal-templates";
 import { RateLimiter } from "./rate-limiter";
-import { sendOptionsResponse, sendRobotsTxtResponse, sendPortalPage, sendPrivatePngImage, sendPortalAssetFile, sendPrivateResourceFile, sendLogInJsonResponse } from "./http2-response";
+import { sendOptionsResponse, sendRobotsTxtResponse, sendPortalPage, sendPortalAssetFile, sendPrivateResourceFile, sendLogInJsonResponse } from "./http2-response";
 import readServerConfig from "./server-config";
 import { TemporaryTokenDb } from "./temporary-token-db";
 
@@ -30,8 +26,12 @@ const config = readServerConfig();
 const server = new Http2Server(fs.readFileSync(config.tls.keyFile), fs.readFileSync(config.tls.certFile), Logger.ROOT);
 const portalAssets = new PortalAssets(config.devMode, Logger.ROOT);
 const portalTemplates = new PortalTemplates(config.devMode, portalAssets);
-const sessionTokens = new TemporaryTokenDb(config.session.timeout * 1000, config.session.tokenDbFile);
-const rateLimiter = new RateLimiter(config.rates.authGlobal, config.rates.authPerIp, config.rates.dbFile);
+const sessionTokens = new TemporaryTokenDb(config.sessionTimeout * 1000);
+const rateLimiter = new RateLimiter(config.rates.authGlobal, config.rates.authPerIp);
+
+const persistManager = new PersistManager(config.dbFile);
+persistManager.add("t", sessionTokens);
+persistManager.add("r", rateLimiter);
 
 function readRequestHost(req: http2.Http2ServerRequest): string | undefined {
     if (req.httpVersionMajor === 1) {
@@ -71,7 +71,7 @@ async function handleRequest(req: http2.Http2ServerRequest, res: http2.Http2Serv
         return;
     }
 
-    if (config.logRequest)
+    if (config.logRequests)
         l.log(LogType.Info, "http_request", { method: req.method, url: req.url, userAgent: req.headers["user-agent"] ?? null });
 
     // Make sure that the Host header is correct
@@ -305,19 +305,12 @@ async function handleRequest(req: http2.Http2ServerRequest, res: http2.Http2Serv
 server.handleRequest = handleRequest;
 
 Promise.all([
-    portalAssets.add("css/invite.css"),
-    portalAssets.add("css/join.css"),
     portalAssets.add("css/log-in.css"),
     portalAssets.add("js/log-in.js"),
-    sessionTokens.loadFromDisk()
+    persistManager.loadFromDisk()
         .then(result => {
             if (result === LoadFromDiskResult.FileNotFound)
-                Logger.ROOT.log(LogType.Warn, "session_tokens_db_file_missing");
-        }),
-    rateLimiter.loadFromDisk()
-        .then(result => {
-            if (result === LoadFromDiskResult.FileNotFound)
-                Logger.ROOT.log(LogType.Warn, "auth_rate_db_file_missing");
+                Logger.ROOT.log(LogType.Warn, "db_file_missing");
         }),
 ]).then(async () => {
     await server.listen(config.serverPort);
@@ -334,7 +327,7 @@ async function gracefulShutdown() {
     await server.close();
 
     Logger.ROOT.log(LogType.Info, "persisting");
-    await Promise.all([sessionTokens.saveToDisk(), rateLimiter.saveToDisk()]);
+    await persistManager.saveToDisk();
 }
 let isShuttingDown = false;
 function gracefulShutdownWrapper() {

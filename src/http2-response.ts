@@ -152,10 +152,6 @@ export function send404(req: http2.Http2ServerRequest, res: http2.Http2ServerRes
     writeHelper(req, res, 404, SecurityMode.Strict, CacheControl.Forbid, "text/plain; charset=utf-8", ERROR_404_BUFFER, "error_404");
 }
 
-export function sendPrivatePngImage(req: http2.Http2ServerRequest, res: http2.Http2ServerResponse, buffer: Buffer) {
-    writeHelper(req, res, 200, SecurityMode.Strict, CacheControl.Forbid, "image/png", buffer, undefined);
-}
-
 export function sendPortalPage(req: http2.Http2ServerRequest, res: http2.Http2ServerResponse, html: string) {
     writeHelper(req, res, 200, SecurityMode.Strict, CacheControl.Forbid, "text/html; charset=utf-8", Buffer.from(html), undefined, {
         "Content-Security-Policy": "default-src 'none'; connect-src 'self'; script-src 'self'; style-src 'self'; img-src data:; form-action 'self'; navigate-to 'none'; block-all-mixed-content; trusted-types",

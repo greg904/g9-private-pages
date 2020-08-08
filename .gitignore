@@ -5,5 +5,4 @@
 /node_modules/
 
 # DB files
-/sess-token-db.json
-/rate-db.json
+/db.json

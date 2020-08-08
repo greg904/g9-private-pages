@@ -23,7 +23,7 @@ export interface AssetFile {
 }
 
 export class PortalAssets {
-    private static ROOT = path.join(path.dirname(__dirname), "dist", "assets");
+    private static ROOT = path.join(__dirname, "assets");
 
     private readonly urlByNameMap = new Map<string, string>();
     private readonly filePathByUrlMap = new Map<string, string>();

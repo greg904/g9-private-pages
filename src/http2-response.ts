@@ -130,6 +130,16 @@ const ROBOTS_TXT_BUFFER = Buffer.from("User-agent: *\nDisallow: /\n");
 
 const ERROR_404_BUFFER = Buffer.from("The requested file was not found.\n");
 
+export function sendPermanentRedirection(to: string, res: http2.Http2ServerResponse) {
+    res.writeHead(http2.constants.HTTP_STATUS_MOVED_PERMANENTLY, {
+        ...BASE_HEADERS,
+
+        // Allowed methods
+        [http2.constants.HTTP2_HEADER_LOCATION]: to,
+    });
+    res.end();
+}
+
 /**
  * Sends the response that we return when we receive a request with the OPTIONS
  * method.

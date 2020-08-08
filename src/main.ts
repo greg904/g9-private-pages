@@ -19,7 +19,7 @@ import { LoadFromDiskResult, PersistManager } from "./persist";
 import { PortalAssets } from "./portal-assets";
 import { PortalTemplates } from "./portal-templates";
 import { RateLimiter } from "./rate-limiter";
-import { sendOptionsResponse, sendRobotsTxtResponse, sendPortalPage, sendPortalAssetFile, sendPrivateResourceFile, sendLogInJsonResponse } from "./http2-response";
+import { sendOptionsResponse, sendRobotsTxtResponse, sendPortalPage, sendPortalAssetFile, sendPrivateResourceFile, sendLogInJsonResponse, sendPermanentRedirection } from "./http2-response";
 import readServerConfig from "./server-config";
 import { TemporaryTokenDb } from "./temporary-token-db";
 
@@ -82,6 +82,14 @@ async function handleRequest(req: http2.Http2ServerRequest, res: http2.Http2Serv
     if (host === undefined || !config.httpHosts.includes(host)) {
         l.log(LogType.Warn, "http_request_bad_host", { got: host ?? null });
         res.socket.destroy();
+        return;
+    }
+
+    // Redirect to www subdomain
+    const colonIndex = host.indexOf(":");
+    const hostDomain = colonIndex === -1 ? host : host.substring(0, colonIndex);
+    if (hostDomain !== "localhost" && !hostDomain.startsWith("www.")) {
+        sendPermanentRedirection(`https://www.${host}${req.url}`, res);
         return;
     }
 

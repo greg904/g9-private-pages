@@ -1,5 +1,8 @@
-// See TS file and line number in error stack traces
-require("source-map-support").install();
+try {    
+    // See TS file and line number in error stack traces
+    require("source-map-support").install();
+} catch (err) {
+}
 
 import * as crypto from "crypto";
 import * as fs from "fs";

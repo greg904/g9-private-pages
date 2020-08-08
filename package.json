@@ -19,6 +19,7 @@
     "html-minifier": "^4.0.0",
     "minimist": "^1.2.5",
     "open-cli": "^6.0.1",
+    "postcss-import": "^12.0.1",
     "postcss-preset-env": "^6.7.0",
     "source-map-support": "^0.5.19",
     "ts-node-dev": "^1.0.0-pre.56",
@@ -26,7 +27,6 @@
   },
   "dependencies": {
     "mime-types": "^2.1.27",
-    "nunjucks": "^3.2.2",
-    "postcss-import": "^12.0.1"
+    "nunjucks": "^3.2.2"
   }
 }

@@ -31,7 +31,6 @@ function setupJsForm() {
     }
 
     var passwordField = document.getElementById("password-field");
-    var totpField = document.getElementById("totp-field");
     function onSubmit(e) {
         // Don't continue if there is anything invalid
         if (!e.target.checkValidity())
@@ -71,7 +70,6 @@ function setupJsForm() {
 
         // Reset fields
         passwordField.value = "";
-        totpField.value = "";
     }
 
     var form = document.getElementById("log-in-form");

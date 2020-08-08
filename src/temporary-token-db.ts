@@ -2,7 +2,7 @@ import * as crypto from "crypto";
 import * as util from "util";
 
 import { base64UrlSafeEncode } from "./encoding";
-import { PersistableModule } from "./persistable-module";
+import { Persistable } from "./persistable";
 
 const cryptoRandomBytes = util.promisify(crypto.randomBytes);
 
@@ -37,7 +37,7 @@ export class Token {
  * earlier but whose remaining lifetime is still greater that the lifetime
  * specified in the constructor.
  */
-export class TemporaryTokenDb extends PersistableModule {
+export class TemporaryTokenDb extends Persistable {
     private static MAX_VALID_TOKEN_COUNT = 32;
 
     private readonly tokens: Token[] = [];

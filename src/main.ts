@@ -16,11 +16,11 @@ import { readCookies } from "./cookies";
 import { base64UrlSafeEncode, base32Encode } from "./encoding";
 import Http2Server from "./http2-server";
 import { Logger, LogType } from "./logger";
-import { LoadFromDiskResult } from "./persistable-module";
+import { LoadFromDiskResult } from "./persistable";
 import { PortalAssets } from "./portal-assets";
 import { PortalTemplates } from "./portal-templates";
 import { RateLimiter } from "./rate-limiter";
-import { sendOptionsResponse, sendRobotsTxtResponse, sendLogInPage, sendPrivatePngImage, sendPortalAssetFile, sendPrivateResourceFile, sendLogInJsonResponse } from "./http2-response";
+import { sendOptionsResponse, sendRobotsTxtResponse, sendPortalPage, sendPrivatePngImage, sendPortalAssetFile, sendPrivateResourceFile, sendLogInJsonResponse } from "./http2-response";
 import readServerConfig from "./server-config";
 import { TemporaryTokenDb } from "./temporary-token-db";
 
@@ -41,56 +41,26 @@ function readRequestHost(req: http2.Http2ServerRequest): string | undefined {
     }
 }
 
-async function tryHandleTotpQrCodeRequest(req: http2.Http2ServerRequest, res: http2.Http2ServerResponse, queryStr: string, l: Logger): Promise<boolean> {
-    let query = null;
-    try {
-        query = querystring.parse(queryStr);
-    } catch (err) {
-        l.log(LogType.Info, "totp_qr_code_query_weird", { err });
-        return false;
-    }
+async function makeAntiCsrfNonceAndToken(): Promise<{ nonce: string, token: string }> {
+    const nonce = await cryptoRandomBytes(16);
 
-    if (typeof query.token !== "string") {
-        l.log(LogType.Info, "totp_qr_code_query_token_missing");
-        return false;
-    }
+    const formTimeout = new Date().getTime() + 1000 * config.csrf.formTimeout;
+    const formTimeoutBuffer = Buffer.alloc(8);
+    formTimeoutBuffer.writeDoubleLE(formTimeout);
 
-    if (query.token.length >= 512) {
-        l.log(LogType.Info, "totp_qr_code_query_token_too_large");
-        return false;
-    }
+    const hmac = crypto.createHmac("sha256", config.csrf.secret);
+    hmac.update(nonce);
+    hmac.update(formTimeoutBuffer);
+    const digest = hmac.digest();
 
-    try {
-        const data = Buffer.from(query.token, "base64");
-        const actualDigest = data.subarray(0, 32);
-        const expiresAtBuffer = data.subarray(32, 40);
+    const token = Buffer.alloc(40);
+    token.set(digest, 0);
+    token.set(formTimeoutBuffer, 32);
 
-        const hmac = crypto.createHmac("sha256", config.totp.qrCodeUrlKey);
-        hmac.update(expiresAtBuffer);
-        const expectedDigest = hmac.digest();
-
-        if (!actualDigest.equals(expectedDigest)) {
-            l.log(LogType.Warn, "totp_qr_code_query_token_forged");
-            return false;
-        }
-
-        const expiresAt = new Date(expiresAtBuffer.readDoubleLE(0));
-        if (new Date() >= expiresAt) {
-            l.log(LogType.Info, "totp_qr_code_query_token_expired");
-            return false;
-        }
-    } catch (err) {
-        l.log(LogType.Info, "totp_qr_code_query_token_weird", { err });
-        return false;
-    }
-
-    const issuer = encodeURIComponent(config.totp.issuer);
-    const accountName = encodeURIComponent(config.totp.accountName);
-    const totpUrl = `otpauth://totp/${issuer}:${accountName}?secret=${base32Encode(config.totp.key)}&issuer=${issuer}`;
-    const buffer = await qrcode.toBuffer(totpUrl, { scale: 10 });
-    // Send the image file to the client
-    sendPrivatePngImage(req, res, buffer);
-    return true;
+    return {
+        nonce: base64UrlSafeEncode(nonce),
+        token: base64UrlSafeEncode(token),
+    };
 }
 
 async function handleRequest(req: http2.Http2ServerRequest, res: http2.Http2ServerResponse, l: Logger) {
@@ -102,11 +72,11 @@ async function handleRequest(req: http2.Http2ServerRequest, res: http2.Http2Serv
     }
 
     if (config.logRequest)
-        l.log(LogType.Info, "http_request", { method: req.method, url: req.url, userAgent: req.headers["user-agent"] });
+        l.log(LogType.Info, "http_request", { method: req.method, url: req.url, userAgent: req.headers["user-agent"] ?? null });
 
     // Make sure that the Host header is correct
     const host = readRequestHost(req);
-    if (host === undefined || !config.allowedHosts.includes(host)) {
+    if (host === undefined || !config.httpHosts.includes(host)) {
         l.log(LogType.Warn, "http_request_bad_host", { got: host ?? null });
         res.socket.destroy();
         return;
@@ -136,16 +106,6 @@ async function handleRequest(req: http2.Http2ServerRequest, res: http2.Http2Serv
     if (urlWithoutQuery === "/robots.txt") {
         sendRobotsTxtResponse(req, res);
         return;
-    }
-
-    // Allow authenticated users to generate QR-codes
-    if (urlWithoutQuery === "/totp-qr-code.png") {
-        if (queryStartIndex === -1) {
-            l.log(LogType.Info, "totp_qr_code_query_missing");
-        } else {
-            if (await tryHandleTotpQrCodeRequest(req, res, req.url.substring(queryStartIndex + 1), l))
-                return;
-        }
     }
 
     const file = portalAssets.getFileFromUrl(urlWithoutQuery);
@@ -200,17 +160,6 @@ async function handleRequest(req: http2.Http2ServerRequest, res: http2.Http2Serv
             return;
         }
         
-        // Validate the TOTP
-        const totpWithoutSpaces = body.totp.replace(/\s/g, "");
-        const totpValid = totpWithoutSpaces.length === 6 &&
-            [...totpWithoutSpaces].every(c => c >= '0' && c <= '9');
-        if (!totpValid) {
-            // Do not log the whole body as this could happen if the user uses an
-            // old browser which doesn't support client-side validation and in that
-            // case, we don't want to log the password.
-            l.log(LogType.Warn, "auth_request_body_weird_totp", { totp: body.totp });
-        }
-
         let isFromJs = body.responseType === AuthResponseType.Json;
 
         // Check anti-CSRF token
@@ -280,19 +229,14 @@ async function handleRequest(req: http2.Http2ServerRequest, res: http2.Http2Serv
         }
 
         let success = false;
-        if (logInFormError === null && body.password !== "" && totpValid) {
+        if (logInFormError === null && body.password !== "") {
             if (!rateLimiter.validate(ip)) {
                 l.log(LogType.Warn, "auth_rate_limited");
             } else {
                 // Validate the credentials.
-                // Note: do not short circuit to make timing attacks harder (but
-                // still possible).
-                success = true;
-                success = body.password === config.password && success;
-                success = totpWithoutSpaces === totp.gen(config.totp.key) && success;
-
-                if (success) {
+                if (body.password === config.password) {
                     l.log(LogType.Info, "auth_success");
+                    success = true;
                     rateLimiter.resetPunishments(ip);
                 } else {
                     l.log(LogType.Info, "auth_failed");
@@ -345,35 +289,24 @@ async function handleRequest(req: http2.Http2ServerRequest, res: http2.Http2Serv
         // Send the private resource
         await sendPrivateResourceFile(filePath, req, res);
     } else {
-        const antiCsrfNonce = await cryptoRandomBytes(16);
-        res.setHeader("Set-Cookie", `__Host-anti-csrf-nonce=${base64UrlSafeEncode(antiCsrfNonce)}; Path=/; Secure; HttpOnly; SameSite=Strict`);
-
-        const formTimeout = new Date().getTime() + 1000 * config.csrf.formTimeout;
-        const formTimeoutBuffer = Buffer.alloc(8);
-        formTimeoutBuffer.writeDoubleLE(formTimeout);
-
-        const hmac = crypto.createHmac("sha256", config.csrf.secret);
-        hmac.update(antiCsrfNonce);
-        hmac.update(formTimeoutBuffer);
-        const digest = hmac.digest();
-
-        const antiCsrfToken = Buffer.alloc(40);
-        antiCsrfToken.set(digest, 0);
-        antiCsrfToken.set(formTimeoutBuffer, 32);
+        const { nonce: antiCsrfNonce, token: antiCsrfToken } = await makeAntiCsrfNonceAndToken();
+        res.setHeader("Set-Cookie", `__Host-anti-csrf-nonce=${antiCsrfNonce}; Path=/; Secure; HttpOnly; SameSite=Strict`);
 
         // Send the authentication page
         const logInPage = await portalTemplates.render("log-in.html.njk", {
             credentialsErrorClass: "class=\"form-error" + (logInFormError === "credentials" ? "" : " hidden") + "\"",
             csrfErrorClass: "class=\"form-error" + (logInFormError === "csrf" ? "" : " hidden") + "\"",
-            antiCsrfToken: base64UrlSafeEncode(antiCsrfToken),
+            antiCsrfToken,
         });
-        sendLogInPage(req, res, logInPage);
+        sendPortalPage(req, res, logInPage);
     }
 }
 
 server.handleRequest = handleRequest;
 
 Promise.all([
+    portalAssets.add("css/invite.css"),
+    portalAssets.add("css/join.css"),
     portalAssets.add("css/log-in.css"),
     portalAssets.add("js/log-in.js"),
     sessionTokens.loadFromDisk()

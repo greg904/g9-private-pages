@@ -22,6 +22,7 @@ export function readCookies(req: http2.Http2ServerRequest, l: Logger): RequestCo
                 l.log(LogType.Warn, "http_request_cookie_header_invalid");
                 return null;
             }
+            
             const name = decodeURIComponent(parts[0].trim());
             const value = decodeURIComponent(parts[1].trim());
             if (name === "__Host-session-token") {

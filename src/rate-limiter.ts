@@ -1,4 +1,4 @@
-import { PersistableModule } from "./persistable-module";
+import { Persistable } from "./persistable";
 
 interface Bucket {
     volume: number;
@@ -10,7 +10,7 @@ export interface RateLimit {
     readonly windowSize: number;
 }
 
-export class RateLimiter extends PersistableModule {
+export class RateLimiter extends Persistable {
     private static MAX_IP_COUNT = 32;
 
     private readonly limitGlobal: RateLimit;

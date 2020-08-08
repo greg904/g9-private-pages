@@ -5,7 +5,6 @@ import { Logger, LogType } from "./logger";
 
 export interface AuthRequest {
     password: string;
-    totp: string;
     antiCsrfToken: string;
     responseType: AuthResponseType;
 }
@@ -71,17 +70,13 @@ export async function readAuthRequest(req: http2.Http2ServerRequest, l: Logger):
 
     // Validate the request body
     if (body["anti-csrf-token"] === null || typeof body["anti-csrf-token"] !== "string" ||
-        body.password === null || typeof body.password !== "string" ||
-        body.totp === null || typeof body.totp !== "string") {
+        body.password === null || typeof body.password !== "string") {
         l.log(LogType.Warn, "auth_request_body_type_error", { body: bodyStr });
         return null;
     }
 
-
-
     return {
         password: body.password,
-        totp: body.totp,
         antiCsrfToken: body["anti-csrf-token"],
         responseType,
     };

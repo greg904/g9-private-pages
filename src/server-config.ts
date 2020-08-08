@@ -3,17 +3,11 @@ import { RateLimit } from "./rate-limiter";
 interface ServerConfig {
     devMode: boolean;
     serverPort: number;
-    allowedHosts: string[];
+    httpHosts: string[];
     httpOrigins: string[];
     password: string;
     privateResourcesRoot: string;
     logRequest: boolean;
-    totp: {
-        key: Buffer;
-        qrCodeUrlKey: Buffer;
-        issuer: string;
-        accountName: string;
-    }
     tls: {
         keyFile: string;
         certFile: string;
@@ -58,17 +52,11 @@ export default function readServerConfig(): ServerConfig {
     return {
         devMode: process.env.NODE_ENV === "development",
         serverPort,
-        allowedHosts: (process.env.G9_HOSTS || `localhost:${serverPort}`).split(","),
+        httpHosts: (process.env.G9_HOSTS || `localhost:${serverPort}`).split(","),
         httpOrigins: (process.env.G9_HTTP_ORIGIN || `https://localhost:${serverPort}`).split(","),
         password: process.env.G9_PASSWD || "insecure-password",
         privateResourcesRoot: process.env.G9_PRIV_ROOT || "private-res",
         logRequest: process.env.G9_LOG_REQUESTS !== "0",
-        totp: {
-            key: Buffer.from(process.env.G9_TOTP_KEY || "VGhpcyBpcyBhIHZlcnkgaW5zZWN1cmUgVE9UUCBrZXk=", "base64"),
-            qrCodeUrlKey: Buffer.from(process.env.G9_TOTP_QR_CODE_URL_KEY || "VGhpcyBpcyBhIHZlcnkgaW5zZWN1cmUgVE9UUCBRUi1jb2RlIFVSTCBrZXk=", "base64"),
-            issuer: process.env.G9_TOTP_ISSUER || "ExampleApp",
-            accountName: process.env.G9_TOTP_ACCOUNT_NAME || "resource-access",
-        },
         tls: {
             keyFile: process.env.G9_TLS_KEY_FILE || "dev-private-key.pem",
             certFile: process.env.G9_TLS_CERT_FILE || "dev-cert.pem",

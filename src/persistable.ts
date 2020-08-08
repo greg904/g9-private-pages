@@ -5,7 +5,7 @@ export const enum LoadFromDiskResult {
     FileNotFound,
 }
 
-export abstract class PersistableModule {
+export abstract class Persistable {
     private readonly persistFile?: string;
     
     constructor(persistFile?: string) {

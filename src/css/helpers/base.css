@@ -1,0 +1,74 @@
+body {
+    line-height: 1.5em;
+
+    /* Use the system font instead of the default sans-serif font
+       because it's too ugly. */
+    font-family: system-ui;
+}
+
+html, body {
+    height: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+h1 {
+    margin: 0.667em 0;
+    font-size: 1.5em;
+    line-height: 1.3em;
+}
+
+section {
+    margin: 2em 0;
+}
+
+section h1 {
+    margin: 1em 0;
+    font-size: 1em;
+    line-height: 1em;
+}
+
+code {
+    /* Take the maximum space horizontally before breaking because the code is
+       not meant to be read, but to be copied and pasted. */
+    word-break: break-all;
+}
+
+code, .box {
+    /* Make sure that the background color and border are displayed as if it was
+       a rectangle instead of multiple lines when the text is wrapping. */
+    display: block;
+
+    padding: 0.5em;
+    background-color: #F1F1F1;
+    border: 2px solid #C1C1C1;
+}
+
+body, code, input {
+    font-size: 16px;
+}
+
+a {
+    color: #0084FF;
+}
+
+img {
+    display: block;
+    margin: 0 auto;
+}
+
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: #000000;
+        color: #FFFFFF;
+    }
+
+    code, .box {
+        background-color: #121314;
+        border-color: #292929;
+    }
+
+    a {
+        color: #60B2FF;
+    }
+}

@@ -1,0 +1,33 @@
+.center-table {
+    /* Center the content horizontally */
+    margin: 0 auto;
+
+    /* Center the child div vertically (part 1). Note that we use the
+       `display: table` and `vertical-align: middle` way to do it instead of
+       `display: flex` because old IE doesn't support it. */
+    display: table;
+}
+
+.center-table-cell {
+    /* Center the child div vertically (part 2) */
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.no-margin-top {
+    margin-top: 0;
+}
+
+.no-margin-bottom {
+    margin-bottom: 0;
+}
+
+.small-container {
+    padding: 2em;
+    max-width: 25em;
+}
+
+.large-container {
+    padding: 2em;
+    max-width: 40em;
+}

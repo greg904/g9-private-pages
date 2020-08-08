@@ -13,7 +13,8 @@ class Http2RequestLogContext implements LogContext {
     toJson() {
         return {
             type: "http2_server_request",
-            ip: this.req.socket.remoteAddress
+            ip: this.req.socket.remoteAddress,
+            userAgent: this.req.headers["user-agent"] ?? null,
         };
     }
 }

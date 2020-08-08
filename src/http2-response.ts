@@ -16,12 +16,13 @@ const BASE_HEADERS: http2.OutgoingHttpHeaders = {
 
 /**
  * We will have different behaviors for the different parts of the web site.
+ * 
  * We will be more strict with our own content and more lax with the user
  * uploaded content (the private resources).
  */
 const enum SecurityMode {
     Strict,
-    Default
+    Default,
 }
 
 const enum CacheControl {
@@ -35,9 +36,8 @@ const enum CacheControl {
 }
 
 function writeHeadHelper(req: http2.Http2ServerRequest, res: http2.Http2ServerResponse, statusCode: number, securityMode: SecurityMode, cacheControl: CacheControl, contentType: string | undefined, contentLength: number, etag: string | undefined, additionalHeaders: http2.OutgoingHttpHeaders = {}) {
-    if (req.method === "HEAD" && statusCode === http2.constants.HTTP_STATUS_OK) {
+    if (req.method === "HEAD" && statusCode === http2.constants.HTTP_STATUS_OK)
         statusCode = http2.constants.HTTP_STATUS_NO_CONTENT;
-    }
 
     const headers: http2.OutgoingHttpHeaders = {
         ...BASE_HEADERS,
@@ -82,6 +82,7 @@ function writeHeadHelper(req: http2.Http2ServerRequest, res: http2.Http2ServerRe
 
 function writeHelper(req: http2.Http2ServerRequest, res: http2.Http2ServerResponse, statusCode: number, securityMode: SecurityMode, cacheControl: CacheControl, contentType: string | undefined, content: Buffer, etag: string | undefined, additionalHeaders: http2.OutgoingHttpHeaders = {}) {
     writeHeadHelper(req, res, statusCode, securityMode, cacheControl, contentType, content.length, etag, additionalHeaders);
+
     if (req.method === "HEAD") {
         // No Content
         res.end();
@@ -125,9 +126,9 @@ async function sendFile(req: http2.Http2ServerRequest, res: http2.Http2ServerRes
 }
 
 // Disallow crawling for every page
-const ROBOTS_TXT_BUFFER = Buffer.from("User-agent: *\nDisallow: /");
+const ROBOTS_TXT_BUFFER = Buffer.from("User-agent: *\nDisallow: /\n");
 
-const ERROR_404_BUFFER = Buffer.from("The requested file was not found.");
+const ERROR_404_BUFFER = Buffer.from("The requested file was not found.\n");
 
 /**
  * Sends the response that we return when we receive a request with the OPTIONS
@@ -146,13 +147,16 @@ export function sendOptionsResponse(res: http2.Http2ServerResponse) {
 export function sendRobotsTxtResponse(req: http2.Http2ServerRequest, res: http2.Http2ServerResponse) {
     writeHelper(req, res, SecurityMode.Strict, 200, CacheControl.CacheForever, "text/plain; charset=utf-8", ROBOTS_TXT_BUFFER, "robots_txt");
 }
+
 export function send404(req: http2.Http2ServerRequest, res: http2.Http2ServerResponse) {
     writeHelper(req, res, 404, SecurityMode.Strict, CacheControl.Forbid, "text/plain; charset=utf-8", ERROR_404_BUFFER, "error_404");
 }
+
 export function sendPrivatePngImage(req: http2.Http2ServerRequest, res: http2.Http2ServerResponse, buffer: Buffer) {
     writeHelper(req, res, 200, SecurityMode.Strict, CacheControl.Forbid, "image/png", buffer, undefined);
 }
-export function sendLogInPage(req: http2.Http2ServerRequest, res: http2.Http2ServerResponse, html: string) {
+
+export function sendPortalPage(req: http2.Http2ServerRequest, res: http2.Http2ServerResponse, html: string) {
     writeHelper(req, res, 200, SecurityMode.Strict, CacheControl.Forbid, "text/html; charset=utf-8", Buffer.from(html), undefined, {
         "Content-Security-Policy": "default-src 'none'; connect-src 'self'; script-src 'self'; style-src 'self'; img-src data:; form-action 'self'; navigate-to 'none'; block-all-mixed-content; trusted-types",
         // Block everything
@@ -160,6 +164,7 @@ export function sendLogInPage(req: http2.Http2ServerRequest, res: http2.Http2Ser
         "X-XSS-Protection": "1; mode=block",
     });
 }
+
 export function sendLogInJsonResponse(req: http2.Http2ServerRequest, res: http2.Http2ServerResponse, json: any) {
     writeHelper(req, res, 200, SecurityMode.Strict, CacheControl.Forbid, "application/x-log-in-response; charset=utf-8", Buffer.from(JSON.stringify(json)), undefined);
 }
@@ -167,6 +172,7 @@ export function sendLogInJsonResponse(req: http2.Http2ServerRequest, res: http2.
 export function sendPortalAssetFile(file: string, etag: string, req: http2.Http2ServerRequest, res: http2.Http2ServerResponse) {
     return sendFile(req, res, file, SecurityMode.Strict, CacheControl.CacheForever, etag);
 }
+
 export function sendPrivateResourceFile(file: string, req: http2.Http2ServerRequest, res: http2.Http2ServerResponse) {
     return sendFile(req, res, file, SecurityMode.Default, CacheControl.Private, undefined);
 }

@@ -7,8 +7,8 @@
         <link rel="stylesheet" href="{{ assetUrlByName('css/log-in.css') }}">
         <title>Log in</title>
     </head>
-    <body id="center-table">
-        <div id="center-table-cell">
+    <body class="center-table">
+        <div class="center-table-cell">
             <div id="modal">
                 <div id="modal-header">
                     <h1>You must log in to access this resource</h1>
@@ -19,9 +19,8 @@
                 </div>
 
                 <p id="credentials-error" {{credentialsErrorClass|safe}}>
-                    <strong>Invalid password or TOTP!</strong> If you forgot
-                    your password or lost access to the TOTP generator, contact
-                    your administator.
+                    <strong>Invalid password!</strong> If you forgot your
+                    password, contact your administator.
                 </p>
                 <p id="csrf-error" {{csrfErrorClass|safe}}>
                     <strong>This log in form has expired!</strong> Please,
@@ -40,15 +39,6 @@
                         <label for="password-field">Password</label>
                         <input id="password-field" type="password"
                             name="password" autofocus required>
-                    </div>
-        
-                    <div class="field-group">
-                        <label for="totp-field">
-                            TOTP (6-digit code on your phone)
-                        </label>
-                        <input id="totp-field" type="text" name="totp" required
-                            pattern="(\s*\d){6}\s*" inputmode="numeric"
-                            placeholder="Example: 123456">
                     </div>
         
                     <input id="submit-button--normal" class="submit-button"

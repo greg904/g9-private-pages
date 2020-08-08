@@ -5,7 +5,7 @@ import * as nunjucks from "nunjucks";
 import { PortalAssets } from "./portal-assets";
 
 export  class PortalTemplates {
-    private static ROOT = path.join(__dirname, "templates");
+    private static ROOT = path.join(path.dirname(__dirname), "dist", "templates");
 
     private readonly env: nunjucks.Environment;
 

@@ -155,15 +155,15 @@ export function sendOptionsResponse(res: http2.Http2ServerResponse) {
 }
 
 export function sendRobotsTxtResponse(req: http2.Http2ServerRequest, res: http2.Http2ServerResponse) {
-    writeHelper(req, res, SecurityMode.Strict, 200, CacheControl.CacheForever, "text/plain; charset=utf-8", ROBOTS_TXT_BUFFER, "robots_txt");
+    writeHelper(req, res, http2.constants.HTTP_STATUS_OK, SecurityMode.Strict, CacheControl.CacheForever, "text/plain; charset=utf-8", ROBOTS_TXT_BUFFER, "robots_txt");
 }
 
 export function send404(req: http2.Http2ServerRequest, res: http2.Http2ServerResponse) {
-    writeHelper(req, res, 404, SecurityMode.Strict, CacheControl.Forbid, "text/plain; charset=utf-8", ERROR_404_BUFFER, "error_404");
+    writeHelper(req, res, http2.constants.HTTP_STATUS_NOT_FOUND, SecurityMode.Strict, CacheControl.Forbid, "text/plain; charset=utf-8", ERROR_404_BUFFER, "error_404");
 }
 
 export function sendPortalPage(req: http2.Http2ServerRequest, res: http2.Http2ServerResponse, html: string) {
-    writeHelper(req, res, 200, SecurityMode.Strict, CacheControl.Forbid, "text/html; charset=utf-8", Buffer.from(html), undefined, {
+    writeHelper(req, res, http2.constants.HTTP_STATUS_OK, SecurityMode.Strict, CacheControl.Forbid, "text/html; charset=utf-8", Buffer.from(html), undefined, {
         "Content-Security-Policy": "default-src 'none'; connect-src 'self'; script-src 'self'; style-src 'self'; img-src data:; form-action 'self'; navigate-to 'none'; block-all-mixed-content; trusted-types",
         // Block everything
         "Permissions-Policy": "accelerometer 'none'; ambient-light-sensor 'none'; autoplay 'none'; battery 'none'; camera 'none'; display-capture 'none'; document-domain 'none'; encrypted-media 'none'; geolocation 'none'; fullscreen 'none'; execution-while-not-rendered 'none'; execution-while-out-of-viewport 'none'; gyroscope 'none'; magnetometer 'none'; microphone 'none'; midi 'none'; navigation-override 'none'; payment 'none'; picture-in-picture 'none'; publickey-credentials-get 'none'; sync-xhr 'none'; usb 'none'; wake-lock 'none'; web-share 'none'; xr-spatial-tracking 'none'",
@@ -172,7 +172,7 @@ export function sendPortalPage(req: http2.Http2ServerRequest, res: http2.Http2Se
 }
 
 export function sendLogInJsonResponse(req: http2.Http2ServerRequest, res: http2.Http2ServerResponse, json: any) {
-    writeHelper(req, res, 200, SecurityMode.Strict, CacheControl.Forbid, "application/x-log-in-response; charset=utf-8", Buffer.from(JSON.stringify(json)), undefined);
+    writeHelper(req, res, http2.constants.HTTP_STATUS_OK, SecurityMode.Strict, CacheControl.Forbid, "application/x-log-in-response; charset=utf-8", Buffer.from(JSON.stringify(json)), undefined);
 }
 
 export function sendPortalAssetFile(file: string, etag: string, req: http2.Http2ServerRequest, res: http2.Http2ServerResponse) {

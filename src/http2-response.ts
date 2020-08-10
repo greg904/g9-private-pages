@@ -105,6 +105,10 @@ async function sendFile(req: http2.Http2ServerRequest, res: http2.Http2ServerRes
 
     try {
         const stats = await fsFstat(fileHandle.fd);
+        if (stats.isDirectory()) {
+            await sendFile(req, res, path.join(file, "index.html"), securityMode, cacheControl, etag, additionalHeaders);
+            return;
+        }
         if (!stats.isFile()) {
             send404(req, res);
             return;
